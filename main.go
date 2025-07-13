@@ -57,6 +57,9 @@ func previewRename(files []os.DirEntry) {
 
 func actuallyRename(files []os.DirEntry, filepath string) {
 	for _, file := range files {
+		if file.Type().IsDir() {
+			continue
+		}
 		os.Rename(filepath+"/"+file.Name(), filepath+"/"+fixName(file.Name()))
 	}
 }
