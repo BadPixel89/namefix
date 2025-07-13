@@ -85,9 +85,9 @@ func fixName(filename string) string {
 	filename = strings.Replace(filename, "5.1", "", -1)
 	filename = strings.Replace(filename, " ", ".", -1)
 
-	removeDash := regexp.MustCompile(`([.\s-]){2,}`)
+	removechars := regexp.MustCompile(`([.\s-]){2,}`)
 
-	remove := removeDash.FindString(filename)
+	remove := removechars.FindString(filename)
 
 	if remove != "" {
 		filename = strings.Replace(filename, remove, "-", -1)
