@@ -139,23 +139,30 @@ func readconfig() []replacement {
 }
 func createBlankConfig(confdir string) {
 	err := os.MkdirAll(confdir, 0755)
-	os.Create(filepath.Join(confdir, configName))
 	if err != nil {
+		fmt.Println("unable to make config directory")
 		fmt.Println(err.Error())
 		return
 	}
+	_, err = os.Create(filepath.Join(confdir, configName))
+	if err != nil {
+		fmt.Println("unable to make config file")
+		fmt.Println(err.Error())
+		return
+	}
+
 	var blankconfig []replacement
 	dummy := replacement{Match: "", Replacement: ""}
 	blankconfig = append(blankconfig, dummy)
 	confcontents, err := json.MarshalIndent(blankconfig, "", "\t")
 	if err != nil {
-		fmt.Println("marshalling fail")
+		fmt.Println("failed marshalling struct to create blank config")
 		fmt.Println(err.Error())
 		return
 	}
 	err = os.WriteFile(filepath.Join(confdir, configName), confcontents, 0755)
 	if err != nil {
-		fmt.Println("write config fail")
+		fmt.Println("write blank config fail")
 		fmt.Println(err.Error())
 		return
 	}
