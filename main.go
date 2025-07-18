@@ -39,12 +39,13 @@ func main() {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("proceed with changes?:(y/n)")
 	text, _ := reader.ReadString('\n')
-
-	if text != "y\n" {
-		fmt.Println("no changes made. exiting program")
+	//account for newline of windows and unix
+	if text == "y\n" || text == "y\r\n" {
+		actuallyRename(files, filepath, replacements)
 		os.Exit(0)
 	}
-	actuallyRename(files, filepath, replacements)
+	fmt.Println("no changes made exiting program")
+	os.Exit(0)
 }
 
 func previewRename(files []os.DirEntry, replacements []replacement) {
