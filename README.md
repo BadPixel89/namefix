@@ -10,6 +10,7 @@ Regex to match repeat characters after running the replacements is hardcoded in 
 
 TODO:
 flags
+    config flag to open and edit config in a text editor (endgame would be built in config add/remover but the more complex the config the more complex the editor)
     specify config if needed
         possibly have update config feature to copy a given config into the config dir
     specify directory rename (currently dir is skipped)
