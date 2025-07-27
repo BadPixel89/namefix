@@ -15,8 +15,11 @@ type replacement struct {
 	Replacement string `json:"Replacement"`
 }
 
-var configDir string
+var configFile string
 
+var configDirectory string
+
+const configDirName string = "namefix"
 const configName string = "namefix.conf"
 
 func main() {
@@ -71,12 +74,15 @@ func previewRename(files []os.DirEntry, replacements []replacement) {
 	}
 }
 
-func actuallyRename(files []os.DirEntry, filepath string, replacements []replacement) {
+func actuallyRename(files []os.DirEntry, path string, replacements []replacement) {
 	for _, file := range files {
 		if file.Type().IsDir() {
 			continue
 		}
-		os.Rename(filepath+"/"+file.Name(), filepath+"/"+fixName(file.Name(), replacements))
+		//more allocations but way more readable than one line full of filepath joins in brackets
+		oldname := filepath.Join(path, file.Name())
+		newname := filepath.Join(path, fixName(file.Name(), replacements))
+		os.Rename(oldname, newname)
 	}
 }
 func fixName(filename string, replacers []replacement) string {
@@ -93,13 +99,14 @@ func fixName(filename string, replacers []replacement) string {
 	}
 
 	//	keep regex here until we implement into config
-	//	matches sequencs of 2 or more '.' '-' or space
-	removechars := regexp.MustCompile(`([.\s-]){2,}`)
+	//	matches sequencs of 2 or more '.' '-' '_' or spaces
+	// 	these patterns happen if many replacements match, if files are named showname.1080p.webrip.rarbg.x264 the resulting string is showname....
+	removechars := regexp.MustCompile(`([.\s-_]){2,}`)
 	remove := removechars.FindAllString(filename, -1)
 
 	for _, substr := range remove {
 		//match one to stop replace interfering with itself
-		//each substring should occurr at least once if regex matched it
+		//each substring should occurr once if regex matched it
 		filename = strings.Replace(filename, substr, "-", 1)
 	}
 	filename += ext
@@ -108,25 +115,29 @@ func fixName(filename string, replacers []replacement) string {
 	return filename
 }
 func readconfig() []replacement {
-	homepath, err := os.UserHomeDir()
+	userconf, err := os.UserConfigDir()
 	if err != nil {
-		fmt.Println("could not find home directory")
-		return nil
+		fmt.Println("could not find config directory")
+		os.Exit(1)
 	}
-	configDir = filepath.Join(homepath, ".config")
-	_, err = os.Stat(filepath.Join(configDir, configName))
+	configDirectory = userconf
+	//above section feels weird but double return of first method forces us to create a new var instead of using the var at the top of the file
+	configDirectory := filepath.Join(configDirectory, configDirName)
+	configFile = filepath.Join(configDirectory, configName)
+
+	_, err = os.Stat(configFile)
 	if err != nil {
 		if !os.IsNotExist(err) {
 			fmt.Println(err.Error())
 			return nil
 		}
-		createBlankConfig(configDir)
+		createBlankConfig(configDirectory)
 		return nil
 	}
 
-	config, err := os.ReadFile(filepath.Join(configDir, configName))
+	config, err := os.ReadFile(configFile)
 	if err != nil {
-		fmt.Println("failed to read config from: " + configDir)
+		fmt.Println("failed to read config from: " + configFile)
 		fmt.Println(err.Error())
 		return nil
 	}
@@ -138,6 +149,8 @@ func readconfig() []replacement {
 	}
 	return replacementlist
 }
+
+// must pass a directory, the folder will be created and the config is added into it separately
 func createBlankConfig(confdir string) {
 	err := os.MkdirAll(confdir, 0755)
 	if err != nil {
@@ -145,7 +158,7 @@ func createBlankConfig(confdir string) {
 		fmt.Println(err.Error())
 		return
 	}
-	_, err = os.Create(filepath.Join(confdir, configName))
+	_, err = os.Create(configFile)
 	if err != nil {
 		fmt.Println("unable to make config file")
 		fmt.Println(err.Error())
@@ -161,12 +174,12 @@ func createBlankConfig(confdir string) {
 		fmt.Println(err.Error())
 		return
 	}
-	err = os.WriteFile(filepath.Join(confdir, configName), confcontents, 0755)
+	err = os.WriteFile(configFile, confcontents, 0755)
 	if err != nil {
 		fmt.Println("write blank config fail")
 		fmt.Println(err.Error())
 		return
 	}
-	fmt.Println("blank config file created: " + filepath.Join(confdir, configName))
-	fmt.Println("open with a text editor to add or remove replacemnt definitions")
+	fmt.Println("blank config file created: " + configFile)
+	fmt.Println("open with a text editor to add or remove replacemnt definitions, it's a bit annoying editing json but it's a simple enough structure - config editor coming one day")
 }
