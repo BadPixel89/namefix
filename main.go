@@ -100,7 +100,7 @@ func fixName(filename string, replacers []replacement) string {
 
 	//	keep regex here until we implement into config
 	//	matches sequencs of 2 or more '.' '-' '_' or spaces
-	// 	these patterns happen if many replacements match, if files are named showname.1080p.webrip.rarbg.x264 the resulting string is showname....
+	// 	these patterns happen if many replacements match, "showname.1080p.webrip.rarbg.x264" becomes "showname...."
 	removechars := regexp.MustCompile(`([.\s-_]){2,}`)
 	remove := removechars.FindAllString(filename, -1)
 
