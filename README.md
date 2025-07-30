@@ -1,5 +1,5 @@
 # namefix
-Change names of files to match my preference
+Change names of files to match my preference - this is integrated into aviary now
 
 Removes things according to the config
 
